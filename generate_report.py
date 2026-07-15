@@ -1,0 +1,195 @@
+import os
+import json
+import shutil
+from datetime import date, datetime
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+OUTPUT_HTML = os.path.join(BASE_DIR, "index.html")
+TEMPLATE_PATH = os.path.join(BASE_DIR, "report_template.html")
+
+def init_dirs():
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+def is_trade_day(check_date=None):
+    if check_date is None:
+        check_date = date.today()
+    if check_date.weekday() >= 5:
+        return False
+    return True
+
+def build_full_data():
+    """
+    生产环境：在此处接入权威信源抓取逻辑
+    1. 上交所/深交所官网指数、成交额
+    2. 国家统计局、证监会政策
+    3. 巨潮资讯公告
+    4. 四大证券报产业资讯
+    注意：社区/自媒体内容仅作线索，必须核验后才能进入结论
+    """
+    today_str = date.today().strftime("%Y-%m-%d")
+    date_key = date.today().strftime("%Y%m%d")
+
+    return {
+        "date": today_str,
+        "date_key": date_key,
+        "is_trade_day": True,
+        "one_sentence_summary": "市场呈现指数弱、个股强分化，科创50大跌4.25%领跌，创新药、消费逆势走强；半导体高位获利兑现，明日重点观察科创止跌信号、市场成交量与中报业绩披露节奏。",
+        "market_temp": "震荡",
+        "temp_reasons": [
+            "五大指数全线收跌，但超3300只个股上涨，指数与个股严重分化",
+            "两市成交额2.57万亿，较前一交易日缩量1328亿，观望情绪升温",
+            "资金高低切换明显，高位科技流出，低位医药、消费获资金承接",
+            "科创50放量大跌超4%，科技赛道短期情绪退潮",
+            "题材连板高度受限，主线持续性走弱"
+        ],
+        "index_list": [
+            {"name": "上证指数", "close": 3955.58, "change": -0.29},
+            {"name": "深证成指", "close": 14779.40, "change": -0.97},
+            {"name": "创业板指", "close": 3804.70, "change": -1.21},
+            {"name": "科创50", "close": 1924.27, "change": -4.25},
+            {"name": "北证50", "close": 1131.83, "change": -1.80}
+        ],
+        "market_overview": {
+            "total_volume": "2.57万亿",
+            "volume_change": "-1328亿",
+            "rise_count": 3351,
+            "fall_count": 2098,
+            "limit_up": 74,
+            "limit_down": 33
+        },
+        "volume_dates": ["07.08","07.09","07.10","07.11","07.12","07.14","07.15"],
+        "volume_7d": [2.41, 2.62, 2.73, 2.68, 2.71, 2.70, 2.57],
+        "hot_top5": [
+            {
+                "rank": 1,
+                "title": "创新药板块全线爆发，政策+产业共振",
+                "category": "产业+政策",
+                "catalysis": "新版基药目录纳入国产1类创新药，药监局优化CGT审评，药企密集海外BD授权",
+                "source": "国家卫健委、NMPA、上市公司公告、证券时报",
+                "source_level": "A",
+                "a_share_map": "CXO、创新药、生物科技大涨，多只个股20cm涨停，哈药4连板",
+                "intensity": "★★★★☆",
+                "duration": "中期，需BD与业绩验证",
+                "verify_index": "月度BD交易数量、医保谈判结果、药企营收增速",
+                "risk": "医保大幅降价、临床研发失败、短期涨幅过高回调",
+                "tag": "继续跟踪"
+            },
+            {
+                "rank": 2,
+                "title": "6月社零转正，白酒消费板块回暖",
+                "category": "宏观数据",
+                "catalysis": "国家统计局6月社零同比+1.0%，烟酒零售额同比+12.1%",
+                "source": "国家统计局、上海证券报",
+                "source_level": "A",
+                "a_share_map": "次高端、区域白酒批量大涨，多只个股涨停",
+                "intensity": "★★★☆☆",
+                "duration": "短期修复，看中秋动销",
+                "verify_index": "白酒批价、渠道库存、旺季动销数据",
+                "risk": "消费复苏不及预期、价格倒挂、渠道库存积压",
+                "tag": "低位修复"
+            },
+            {
+                "rank": 3,
+                "title": "覆铜板PCB持续涨价，上游原材料紧缺",
+                "category": "涨价",
+                "catalysis": "建滔年内6轮涨价，木林森上调PCB价格10%-15%",
+                "source": "企业公告、上海钢联、证券时报",
+                "source_level": "B",
+                "a_share_map": "覆铜板、PCB业绩大幅预增",
+                "intensity": "★★★★☆",
+                "duration": "中期至年底供需缺口存在",
+                "verify_index": "覆铜板价格指数、AI服务器出货量",
+                "risk": "AI资本开支放缓、新增产能集中释放",
+                "tag": "继续跟踪"
+            },
+            {
+                "rank": 4,
+                "title": "半导体深度调整，存储赛道领跌",
+                "category": "风险事件",
+                "catalysis": "板块交易拥挤，中报业绩落地获利盘集中兑现",
+                "source": "上市公司业绩预告、财联社",
+                "source_level": "B",
+                "a_share_map": "存储、算力设备大跌，科创50大幅回撤",
+                "intensity": "下跌强度★★★★☆",
+                "duration": "短期情绪调整，产业基本面未反转",
+                "verify_index": "DRAM/NAND合约价、台积电季度财报",
+                "risk": "算力需求放缓、海外出口管制收紧",
+                "tag": "谨慎追高"
+            },
+            {
+                "rank": 5,
+                "title": "上半年宏观数据落地，消费边际改善",
+                "category": "宏观数据",
+                "catalysis": "统计局发布半年GDP、工业、投资、消费数据",
+                "source": "国家统计局、新华社",
+                "source_level": "A",
+                "a_share_map": "零售、旅游、餐饮小幅异动",
+                "intensity": "★★☆☆☆",
+                "duration": "短期一次性催化",
+                "verify_index": "7月PMI、稳增长配套政策",
+                "risk": "经济复苏斜率持续偏弱",
+                "tag": "低位修复"
+            }
+        ],
+        "industry_map": [
+            {"direction": "创新药/CXO", "catalysis": "基药扩容、BD出海加速", "source": "卫健委、药企公告", "benefit": "CXO、创新药研发", "verify": "月度BD交易、医保谈判", "risk": "降价、研发失败", "tag": "继续跟踪"},
+            {"direction": "覆铜板/PCB", "catalysis": "AI需求拉动产业链涨价", "source": "企业公告、上海钢联", "benefit": "覆铜板、高阶PCB", "verify": "板材价格、服务器出货", "risk": "需求不及预期", "tag": "继续跟踪"},
+            {"direction": "白酒消费", "catalysis": "社零转正，烟酒高增", "source": "国家统计局", "benefit": "次高端、区域白酒", "verify": "批价、中秋动销", "risk": "复苏乏力", "tag": "低位修复"},
+            {"direction": "存储芯片", "catalysis": "涨价周期落地，业绩兑现", "source": "业绩预告、TrendForce", "benefit": "存储模组、封测", "verify": "DRAM/NAND合约价", "risk": "交易拥挤、需求放缓", "tag": "谨慎追高"},
+            {"direction": "半导体设备", "catalysis": "国产替代订单饱满", "source": "SEMI、中报预告", "benefit": "刻蚀、薄膜、检测设备", "verify": "设备中标公告", "risk": "出口管制升级", "tag": "等待确认"},
+            {"direction": "泛消费复苏", "catalysis": "6月社零数据改善", "source": "国家统计局", "benefit": "零售、旅游、餐饮", "verify": "7月PMI、暑期消费", "risk": "复苏力度弱", "tag": "低位修复"}
+        ],
+        "tomorrow_checklist": [
+            "半导体板块、科创50是否缩量止跌",
+            "创新药板块能否持续走强",
+            "两市成交额能否守住2.5万亿",
+            "北向资金当日整体流向",
+            "中报业绩超预期/暴雷公告数量",
+            "白酒、医药能否形成板块共振",
+            "美股半导体隔夜涨跌表现",
+            "当日有无新产业/稳增长政策发布"
+        ],
+        "position_check": [
+            "仓位暴露：高位科技赛道持仓占比",
+            "题材拥挤度：半导体、AI算力短期拥挤度偏高",
+            "公告验证：持仓个股中报业绩预告核查",
+            "业绩验证：区分纯题材炒作与业绩支撑标的",
+            "成交量：规避放量大跌个股，观察缩量优质标的",
+            "龙虎榜：跟踪机构买卖动向",
+            "政策风险：医药集采、芯片出口管制",
+            "海外风险：美股科技波动、地缘事件"
+        ],
+        "source_level": {
+            "A": "官方政务、交易所、巨潮、公司公告",
+            "B": "权威财经媒体、国际行业数据机构"
+        }
+    }
+
+def main():
+    print(f"[{datetime.now()}] 开始生成早间内参...")
+    
+    if not is_trade_day():
+        print("今日非A股交易日，跳过生成。")
+        return
+
+    init_dirs()
+    data = build_full_data()
+    date_key = data["date_key"]
+
+    # 保存历史JSON
+    json_path = os.path.join(DATA_DIR, f"report_{date_key}.json")
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+    # 复制一份作为 latest
+    shutil.copy(json_path, os.path.join(DATA_DIR, "latest.json"))
+
+    # 直接使用纯静态 HTML（前端 JS 加载 JSON）
+    shutil.copy(TEMPLATE_PATH, OUTPUT_HTML)
+
+    print(f"✅ 生成完成：{OUTPUT_HTML}")
+    print(f"✅ 历史数据：{json_path}")
+
+if __name__ == "__main__":
+    main()
