@@ -404,18 +404,27 @@ async function loadHistoryList() {
 }
 
 // 加载指定日期内参
+// 自动获取 GitHub Pages 子路径前缀
+function getBasePath() {
+    const pathname = window.location.pathname;
+    return pathname.substring(0, pathname.lastIndexOf('/') + 1);
+}
+
 async function loadReport(dateKey) {
-    let url = 'data/latest.json';
+    const base = getBasePath();
+    let url = base + 'data/latest.json';
     if (dateKey !== 'latest') {
-        url = `data/report_${dateKey}.json`;
+        url = base + `data/report_${dateKey}.json`;
     }
     try {
         const res = await fetch(url);
-        if (!res.ok) throw new Error('加载失败');
+        if (!res.ok) throw new Error('数据加载失败，状态码：' + res.status);
         const data = await res.json();
         renderPage(data);
     } catch (e) {
-        console.error(e);
+        console.error('加载失败:', e);
+        // 调试用，上线可去掉
+        // alert('数据加载失败，请确认 data 目录已上传');
     }
 }
 
