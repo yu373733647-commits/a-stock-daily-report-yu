@@ -2,6 +2,7 @@ import os
 import json
 import shutil
 from datetime import date, datetime
+from jinja2 import Template
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -25,7 +26,6 @@ def build_full_data():
     2. 国家统计局、证监会政策
     3. 巨潮资讯公告
     4. 四大证券报产业资讯
-    注意：社区/自媒体内容仅作线索，必须核验后才能进入结论
     """
     today_str = date.today().strftime("%Y-%m-%d")
     date_key = date.today().strftime("%Y%m%d")
@@ -159,11 +159,7 @@ def build_full_data():
             "龙虎榜：跟踪机构买卖动向",
             "政策风险：医药集采、芯片出口管制",
             "海外风险：美股科技波动、地缘事件"
-        ],
-        "source_level": {
-            "A": "官方政务、交易所、巨潮、公司公告",
-            "B": "权威财经媒体、国际行业数据机构"
-        }
+        ]
     }
 
 def main():
@@ -177,16 +173,22 @@ def main():
     data = build_full_data()
     date_key = data["date_key"]
 
-    # 保存历史JSON
+    # 1. 保存历史JSON
     json_path = os.path.join(DATA_DIR, f"report_{date_key}.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-
-    # 复制一份作为 latest
     shutil.copy(json_path, os.path.join(DATA_DIR, "latest.json"))
 
-    # 直接使用纯静态 HTML（前端 JS 加载 JSON）
-    shutil.copy(TEMPLATE_PATH, OUTPUT_HTML)
+    # 2. 使用Jinja2渲染HTML，数据直接写入页面
+    if not os.path.exists(TEMPLATE_PATH):
+        raise FileNotFoundError(f"模板文件不存在：{TEMPLATE_PATH}")
+    
+    with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
+        template = Template(f.read())
+    
+    html_content = template.render(**data)
+    with open(OUTPUT_HTML, "w", encoding="utf-8") as f:
+        f.write(html_content)
 
     print(f"✅ 生成完成：{OUTPUT_HTML}")
     print(f"✅ 历史数据：{json_path}")
