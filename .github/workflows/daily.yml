@@ -2,9 +2,9 @@ name: 每日生成A股早间内参
 
 on:
   schedule:
-    # 北京时间 8:00 = UTC 0:00
+    # 北京时间 8:00 = UTC 0:00，周一到周五
     - cron: '0 0 * * 1-5'
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -34,4 +34,10 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add -A
-          git diff --quiet && git diff --staged --quiet || (git commit -m "自动更新：$(date +%Y-%m-%d) 早间内参" && git push)
+          # 容错写法：有变更才提交，无变更也正常退出不报错
+          if git diff --cached --quiet; then
+            echo "没有内容变更，跳过提交"
+          else
+            git commit -m "自动更新：$(date +%Y-%m-%d) 早间内参"
+            git push
+          fi
