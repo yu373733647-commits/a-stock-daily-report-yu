@@ -29,49 +29,92 @@ def is_trade_day(check_date=None):
 
 def fetch_real_index():
     """
-    抓取五大指数收盘数据
-    信源：新浪财经公开行情接口（交易所授权行情，B级权威信源）
+    抓取五大指数收盘数据，多接口备用，修正字段解析
+    信源：腾讯财经、新浪财经、东方财富公开行情接口（交易所授权行情，B级权威信源）
     """
-    codes = {
-        "sh000001": "上证指数",
-        "sz399001": "深证成指",
-        "sz399006": "创业板指",
-        "sh000688": "科创50",
-        "bj899050": "北证50"
-    }
+    codes = [
+        {"code": "sh000001", "name": "上证指数"},
+        {"code": "sz399001", "name": "深证成指"},
+        {"code": "sz399006", "name": "创业板指"},
+        {"code": "sh000688", "name": "科创50"},
+        {"code": "bj899050", "name": "北证50"}
+    ]
+    code_str = ",".join([item["code"] for item in codes])
+    
+    # 方案1：腾讯财经接口（对服务器IP更友好，优先）
     try:
-        code_str = ",".join(codes.keys())
-        url = f"https://hq.sinajs.cn/list={code_str}"
-        resp = requests.get(url, headers=HEADERS, timeout=10)
+        url = f"https://qt.gtimg.cn/q={code_str}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Referer": "https://finance.qq.com/"
+        }
+        resp = requests.get(url, headers=headers, timeout=10)
         resp.encoding = "gbk"
         text = resp.text
         
         index_list = []
-        for code, name in codes.items():
-            # 解析行情字符串
-            pattern = f'var hq_str_{code}="(.*?)";'
-            import re
+        for item in codes:
+            pattern = f'v_{item["code"]}="(.*?)";'
             match = re.search(pattern, text)
             if not match:
                 continue
-            items = match.group(1).split(",")
-            if len(items) < 4:
+            fields = match.group(1).split("~")
+            if len(fields) < 7:
                 continue
-            close = float(items[2])  # 当前价/收盘价
-            change = float(items[3])  # 涨跌幅
+            # 腾讯字段：索引2=昨收，索引6=最新价
+            pre_close = float(fields[2])
+            close = float(fields[6])
+            # 计算涨跌幅
+            change = round((close - pre_close) / pre_close * 100, 2)
             index_list.append({
-                "name": name,
+                "name": item["name"],
                 "close": round(close, 2),
-                "change": round(change, 2)
+                "change": change
             })
         
         if len(index_list) >= 3:
-            print(f"✅ 指数抓取成功，共获取 {len(index_list)} 条指数数据")
+            print(f"✅ 腾讯财经接口抓取成功，获取 {len(index_list)} 条指数数据")
             return index_list
     except Exception as e:
-        print(f"⚠️ 新浪指数接口失败：{e}")
+        print(f"⚠️ 腾讯财经接口失败：{e}")
     
-    # 兜底：尝试东方财富接口
+    # 方案2：新浪财经接口（备用）
+    try:
+        url = f"https://hq.sinajs.cn/list={code_str}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Referer": "https://finance.sina.com.cn/"
+        }
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.encoding = "gbk"
+        text = resp.text
+        
+        index_list = []
+        for item in codes:
+            pattern = f'var hq_str_{item["code"]}="(.*?)";'
+            match = re.search(pattern, text)
+            if not match:
+                continue
+            fields = match.group(1).split(",")
+            if len(fields) < 4:
+                continue
+            # 新浪字段：索引2=昨收，索引3=最新价
+            pre_close = float(fields[2])
+            close = float(fields[3])
+            change = round((close - pre_close) / pre_close * 100, 2)
+            index_list.append({
+                "name": item["name"],
+                "close": round(close, 2),
+                "change": change
+            })
+        
+        if len(index_list) >= 3:
+            print(f"✅ 新浪财经接口抓取成功，获取 {len(index_list)} 条指数数据")
+            return index_list
+    except Exception as e:
+        print(f"⚠️ 新浪财经接口失败：{e}")
+    
+    # 方案3：东方财富接口（最后备用）
     try:
         url = "https://push2.eastmoney.com/api/qt/ulist.np/get"
         params = {
@@ -79,7 +122,11 @@ def fetch_real_index():
             "secids": "1.000001,0.399001,0.399006,1.000688,0.899050",
             "fields": "f2,f3,f12,f14"
         }
-        resp = requests.get(url, params=params, headers=HEADERS, timeout=10)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Referer": "https://quote.eastmoney.com/"
+        }
+        resp = requests.get(url, params=params, headers=headers, timeout=10)
         data = resp.json()
         name_map = {
             "000001": "上证指数",
@@ -96,12 +143,12 @@ def fetch_real_index():
                 "close": round(item["f2"], 2),
                 "change": round(item["f3"], 2)
             })
-        print("✅ 东方财富指数接口抓取成功")
+        print("✅ 东方财富接口抓取成功")
         return index_list
     except Exception as e:
-        print(f"⚠️ 东方财富指数接口也失败：{e}")
+        print(f"⚠️ 东方财富接口失败：{e}")
     
-    # 最终兜底数据
+    # 最终兜底
     print("⚠️ 全部接口失败，使用兜底数据")
     return [
         {"name": "上证指数", "close": 3955.58, "change": -0.29},
