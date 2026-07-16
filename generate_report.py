@@ -149,35 +149,45 @@ def fetch_real_index():
 # ===================== 2. 市场概况实时抓取（涨跌家数/成交额/涨跌停） =====================
 def fetch_market_overview(index_list):
     """
-    抓取全市场真实概况，失败则根据指数方向生成匹配的兜底数据
+    抓取全市场真实概况：涨跌家数、涨跌停、两市成交额
     信源：东方财富公开市场数据接口（B级权威信源）
     """
     try:
-        # 涨跌家数、涨跌停数量
+        # 1. 抓取全市场涨跌家数、涨跌停数量（补充ut鉴权参数）
         count_url = "https://push2.eastmoney.com/api/qt/stock/count/get"
         count_params = {
             "fltt": "2",
+            "ut": "bd1d9ddb04089700cf9c27f6f7426281",
             "fs": "m:0+t:6,m:0+t:13,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:7,m:1+t:3"
         }
         count_resp = requests.get(count_url, params=count_params, headers=COMMON_HEADERS, timeout=10)
-        count_data = count_resp.json()["data"]
         
-        rise_count = count_data["up"]
-        fall_count = count_data["down"]
-        limit_up = count_data["stop"]
-        limit_down = count_data["stopdown"]
+        # 先校验返回状态和内容
+        if count_resp.status_code != 200 or not count_resp.text.strip():
+            raise Exception("接口返回空内容或状态码异常")
+        
+        # 容错解析JSON
+        try:
+            count_data = count_resp.json()["data"]
+            rise_count = count_data["up"]
+            fall_count = count_data["down"]
+            limit_up = count_data["stop"]
+            limit_down = count_data["stopdown"]
+        except Exception as parse_err:
+            raise Exception(f"涨跌家数JSON解析失败：{parse_err}")
 
-        # 两市成交额
+        # 2. 抓取两市成交额（沪市+深市）
         vol_url = "https://push2.eastmoney.com/api/qt/ulist.np/get"
         vol_params = {
             "fltt": "2",
+            "ut": "bd1d9ddb04089700cf9c27f6f7426281",
             "secids": "1.000001,0.399001",
             "fields": "f6"
         }
         vol_resp = requests.get(vol_url, params=vol_params, headers=COMMON_HEADERS, timeout=10)
         vol_data = vol_resp.json()["data"]["diff"]
         
-        # f6单位：元，换算为万亿
+        # f6单位：元，换算成万亿
         total_volume = sum([item["f6"] for item in vol_data]) / 1e12
         total_volume = round(total_volume, 2)
 
