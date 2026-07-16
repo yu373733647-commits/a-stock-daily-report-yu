@@ -397,7 +397,7 @@ function renderSectorHeatmap() {
     sectorHeatmap = echarts.init(dom);
     
     const textColor = getChartTextColor();
-    const sectors = [
+    const sectors = {{ sector_data | tojson }};
         ['医疗服务', 7.51], ['生物制品', 5.23], ['白酒', 4.12], ['影视院线', 3.87],
         ['食品加工', 2.95], ['零售', 2.31], ['旅游酒店', 1.86], ['家电', 1.52],
         ['汽车', 0.87], ['电力', 0.34], ['银行', -0.12], ['地产', -0.58],
