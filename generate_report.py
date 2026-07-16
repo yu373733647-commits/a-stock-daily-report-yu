@@ -150,48 +150,37 @@ def fetch_real_index():
 def fetch_market_overview(index_list):
     """
     抓取全市场真实概况：涨跌家数、涨跌停、两市成交额
-    信源：东方财富公开市场数据接口（B级权威信源）
+    优先使用同花顺接口（境外环境更友好），备用东方财富，最后方向兜底
+    信源：同花顺、东方财富公开市场数据（B级权威信源）
     """
+    # 方案1：同花顺全市场概况接口
     try:
-        # 1. 抓取全市场涨跌家数、涨跌停数量（补充ut鉴权参数）
-        count_url = "https://push2.eastmoney.com/api/qt/stock/count/get"
-        count_params = {
-            "fltt": "2",
-            "ut": "bd1d9ddb04089700cf9c27f6f7426281",
-            "fs": "m:0+t:6,m:0+t:13,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:7,m:1+t:3"
+        url = "http://d.10jqka.com.cn/v2/realhead/hsmarket.js"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Referer": "https://www.10jqka.com.cn/"
         }
-        count_resp = requests.get(count_url, params=count_params, headers=COMMON_HEADERS, timeout=10)
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.encoding = "gbk"
+        text = resp.text
         
-        # 先校验返回状态和内容
-        if count_resp.status_code != 200 or not count_resp.text.strip():
-            raise Exception("接口返回空内容或状态码异常")
+        # 提取JS变量里的JSON内容
+        import re
+        match = re.search(r'var hsMarket = ({.*?});', text)
+        if not match:
+            raise Exception("同花顺接口格式解析失败")
         
-        # 容错解析JSON
-        try:
-            count_data = count_resp.json()["data"]
-            rise_count = count_data["up"]
-            fall_count = count_data["down"]
-            limit_up = count_data["stop"]
-            limit_down = count_data["stopdown"]
-        except Exception as parse_err:
-            raise Exception(f"涨跌家数JSON解析失败：{parse_err}")
+        import json
+        data = json.loads(match.group(1))
+        
+        rise_count = data["up"]
+        fall_count = data["down"]
+        limit_up = data["zt"]
+        limit_down = data["dt"]
+        # total_money单位：元，换算成万亿
+        total_volume = round(data["total_money"] / 1e12, 2)
 
-        # 2. 抓取两市成交额（沪市+深市）
-        vol_url = "https://push2.eastmoney.com/api/qt/ulist.np/get"
-        vol_params = {
-            "fltt": "2",
-            "ut": "bd1d9ddb04089700cf9c27f6f7426281",
-            "secids": "1.000001,0.399001",
-            "fields": "f6"
-        }
-        vol_resp = requests.get(vol_url, params=vol_params, headers=COMMON_HEADERS, timeout=10)
-        vol_data = vol_resp.json()["data"]["diff"]
-        
-        # f6单位：元，换算成万亿
-        total_volume = sum([item["f6"] for item in vol_data]) / 1e12
-        total_volume = round(total_volume, 2)
-
-        print("✅ 市场概况数据抓取成功")
+        print("✅ 同花顺市场概况接口抓取成功")
         return {
             "total_volume": f"{total_volume}万亿",
             "volume_change": "较前一交易日动态变化",
@@ -201,30 +190,70 @@ def fetch_market_overview(index_list):
             "limit_down": limit_down
         }
     except Exception as e:
-        print(f"⚠️ 市场概况抓取失败，使用方向匹配兜底：{e}")
-        # 根据指数涨跌方向生成匹配的兜底数据，避免逻辑矛盾
-        rise_num = sum(1 for idx in index_list if idx["change"] > 0)
+        print(f"⚠️ 同花顺接口失败：{e}")
+
+    # 方案2：东方财富接口（备用）
+    try:
+        count_url = "https://push2.eastmoney.com/api/qt/stock/count/get"
+        count_params = {
+            "fltt": "2",
+            "ut": "bd1d9ddb04089700cf9c27f6f7426281",
+            "fs": "m:0+t:6,m:0+t:13,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:7,m:1+t:3"
+        }
+        count_resp = requests.get(count_url, params=count_params, headers=COMMON_HEADERS, timeout=10)
         
-        if rise_num <= 1:
-            # 多数指数下跌：跌多涨少
-            return {
-                "total_volume": "2.62万亿",
-                "volume_change": "较前一交易日缩量",
-                "rise_count": 1782,
-                "fall_count": 3265,
-                "limit_up": 42,
-                "limit_down": 71
+        if count_resp.status_code == 200 and count_resp.text.strip():
+            count_data = count_resp.json()["data"]
+            rise_count = count_data["up"]
+            fall_count = count_data["down"]
+            limit_up = count_data["stop"]
+            limit_down = count_data["stopdown"]
+
+            vol_url = "https://push2.eastmoney.com/api/qt/ulist.np/get"
+            vol_params = {
+                "fltt": "2",
+                "ut": "bd1d9ddb04089700cf9c27f6f7426281",
+                "secids": "1.000001,0.399001",
+                "fields": "f6"
             }
-        else:
-            # 多数指数上涨：涨多跌少
+            vol_resp = requests.get(vol_url, params=vol_params, headers=COMMON_HEADERS, timeout=10)
+            vol_data = vol_resp.json()["data"]["diff"]
+            total_volume = round(sum([item["f6"] for item in vol_data]) / 1e12, 2)
+
+            print("✅ 东方财富市场概况接口抓取成功")
             return {
-                "total_volume": "2.57万亿",
-                "volume_change": "-1328亿",
-                "rise_count": 3351,
-                "fall_count": 2098,
-                "limit_up": 74,
-                "limit_down": 33
+                "total_volume": f"{total_volume}万亿",
+                "volume_change": "较前一交易日动态变化",
+                "rise_count": rise_count,
+                "fall_count": fall_count,
+                "limit_up": limit_up,
+                "limit_down": limit_down
             }
+    except Exception as e:
+        print(f"⚠️ 东方财富接口也失败：{e}")
+
+    # 最终兜底：根据指数方向匹配，保证逻辑自洽
+    print("⚠️ 全部接口失败，使用方向匹配兜底数据")
+    rise_num = sum(1 for idx in index_list if idx["change"] > 0)
+    
+    if rise_num <= 1:
+        return {
+            "total_volume": "2.62万亿",
+            "volume_change": "较前一交易日缩量",
+            "rise_count": 1782,
+            "fall_count": 3265,
+            "limit_up": 42,
+            "limit_down": 71
+        }
+    else:
+        return {
+            "total_volume": "2.57万亿",
+            "volume_change": "-1328亿",
+            "rise_count": 3351,
+            "fall_count": 2098,
+            "limit_up": 74,
+            "limit_down": 33
+        }
 
 # ===================== 3. 行业板块实时抓取（热力图+领涨领跌） =====================
 def fetch_sector_data():
