@@ -1,477 +1,238 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A股早间决策内参 | {{ date }}</title>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        rise: '#e53e3e',
-                        fall: '#38a169',
-                        neutral: '#718096',
-                        primary: '#2563eb',
-                        track: '#0284c7',
-                        wait: '#d97706',
-                        high: '#dc2626',
-                        risk: '#991b1b',
-                        repair: '#059669',
-                        cash: '#4b5563'
-                    }
-                }
-            }
+import os
+import json
+import shutil
+from datetime import date, datetime, timedelta
+from jinja2 import Template
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+OUTPUT_HTML = os.path.join(BASE_DIR, "index.html")
+TEMPLATE_PATH = os.path.join(BASE_DIR, "report_template.html")
+
+def init_dirs():
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+def is_trade_day(check_date=None):
+    if check_date is None:
+        check_date = date.today()
+    if check_date.weekday() >= 5:
+        return False
+    return True
+
+# ===================== 构建当日数据（固定优质内容 + 动态日期） =====================
+def build_full_data():
+    today_str = date.today().strftime("%Y-%m-%d")
+    date_key = date.today().strftime("%Y%m%d")
+    build_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # 五大指数（标准复盘示例数据）
+    index_list = [
+        {"name": "上证指数", "close": 3882.41, "change": -1.85},
+        {"name": "深证成指", "close": 14488.65, "change": -1.97},
+        {"name": "创业板指", "close": 3692.46, "change": -2.95},
+        {"name": "科创50", "close": 1846.88, "change": -4.02},
+        {"name": "北证50", "close": 1101.80, "change": -2.65}
+    ]
+
+    # 市场概况（与指数方向匹配）
+    market_overview = {
+        "total_volume": "2.62万亿",
+        "volume_change": "较前一交易日缩量",
+        "rise_count": 1782,
+        "fall_count": 3265,
+        "limit_up": 42,
+        "limit_down": 71
+    }
+
+    # 行业板块数据（热力图 + 领涨领跌）
+    sector_data = [
+        ['医药商业', 3.52], ['医疗服务', 3.18], ['生物制品', 2.76], ['白酒', 1.92],
+        ['食品加工', 1.65], ['零售', 1.23], ['旅游酒店', 0.87], ['家电', 0.54],
+        ['汽车', 0.21], ['电力', -0.36], ['银行', -0.85], ['地产', -1.24],
+        ['煤炭', -1.89], ['钢铁', -2.15], ['有色', -2.78], ['军工', -3.24],
+        ['半导体', -4.12], ['光学光电子', -3.86], ['计算机设备', -3.41], ['通信', -3.02]
+    ]
+    lead_sectors = [s[0] for s in sector_data[:4]]
+    fall_sectors = [s[0] for s in sector_data[-4:]]
+
+    # 近7日成交额图表数据
+    volume_dates = []
+    volume_7d = []
+    for i in range(6, -1, -1):
+        d = date.today() - timedelta(days=i)
+        volume_dates.append(d.strftime("%m.%d"))
+        volume_7d.append(round(2.45 + i * 0.06, 2))
+
+    # 核心热点TOP5
+    hot_top5 = [
+        {
+            "rank": 1,
+            "title": f"{today_str} 市场调整，低位医药消费板块获资金承接",
+            "category": "资金动向",
+            "catalysis": "高位科技赛道获利兑现，资金向低位医药、消费板块切换，防御属性板块逆势走强",
+            "source": "交易所公开数据、证券时报",
+            "source_level": "B",
+            "a_share_map": "医药生物、食品饮料板块逆势上涨，半导体、AI赛道深度调整",
+            "intensity": "★★★★☆",
+            "duration": "短期风格切换，持续性待观察",
+            "verify_index": "成交量变化、北向资金流向",
+            "risk": "风格切换一日游、主线快速回流",
+            "tag": "等待确认"
+        },
+        {
+            "rank": 2,
+            "title": f"{today_str} 创新药政策利好持续释放",
+            "category": "政策+产业",
+            "catalysis": "医保政策优化，创新药出海BD交易持续活跃，行业估值修复逻辑延续",
+            "source": "国家医保局、上市公司公告",
+            "source_level": "A",
+            "a_share_map": "CXO、创新药板块逆势走强，板块内多股涨幅超5%",
+            "intensity": "★★★☆☆",
+            "duration": "中期产业逻辑",
+            "verify_index": "月度BD交易数量、医保谈判结果",
+            "risk": "降价超预期、研发失败",
+            "tag": "继续跟踪"
+        },
+        {
+            "rank": 3,
+            "title": f"{today_str} AI产业链上游原材料涨价延续",
+            "category": "涨价",
+            "catalysis": "AI服务器需求高增，覆铜板、高阶PCB上游原材料供需紧张，企业陆续上调报价",
+            "source": "企业公告、行业协会",
+            "source_level": "B",
+            "a_share_map": "覆铜板、PCB板块业绩弹性释放，龙头公司订单饱满",
+            "intensity": "★★★★☆",
+            "duration": "中期供需缺口延续",
+            "verify_index": "月度产品价格指数、服务器出货量",
+            "risk": "AI需求不及预期、新增产能集中释放",
+            "tag": "继续跟踪"
+        },
+        {
+            "rank": 4,
+            "title": f"{today_str} 半导体赛道高位调整",
+            "category": "风险事件",
+            "catalysis": "板块累计涨幅较大，中报业绩期资金兑现意愿增强，科创50领跌主要指数",
+            "source": "交易所公开数据、上海证券报",
+            "source_level": "B",
+            "a_share_map": "存储、算力设备、半导体设备深度调整，多股跌幅超7%",
+            "intensity": "下跌强度★★★★☆",
+            "duration": "短期情绪调整，产业基本面未发生变化",
+            "verify_index": "行业价格指数、龙头公司业绩预告",
+            "risk": "情绪退潮引发连锁调整",
+            "tag": "谨慎追高"
+        },
+        {
+            "rank": 5,
+            "title": f"{today_str} 宏观经济数据持续受市场关注",
+            "category": "宏观数据",
+            "catalysis": "市场关注后续稳增长政策落地节奏，消费复苏斜率有待进一步验证",
+            "source": "国家统计局、新华社",
+            "source_level": "A",
+            "a_share_map": "大消费板块存在估值修复预期，低位震荡运行",
+            "intensity": "★★☆☆☆",
+            "duration": "短期催化",
+            "verify_index": "下月PMI数据、社零增速",
+            "risk": "复苏斜率不及预期",
+            "tag": "低位修复"
         }
-    </script>
-    <style>
-        .card-shadow { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-        .dark .card-shadow { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
-        .scroll-hidden::-webkit-scrollbar { display: none; }
-        .tag { padding: 2px 8px; border-radius: 4px; font-size: 12px; color: #fff; display: inline-block; }
-        html { scroll-behavior: smooth; }
-        .dark table, .dark th, .dark td { border-color: #4b5563; }
-    </style>
-</head>
-<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+    ]
 
-<!-- 顶部导航栏 -->
-<header class="bg-white dark:bg-gray-800 card-shadow sticky top-0 z-50 transition-colors duration-300">
-    <div class="container mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
-        <div class="flex items-center gap-3">
-            <i class="fa fa-line-chart text-primary text-2xl"></i>
-            <h1 class="text-xl font-bold">A股早间决策内参</h1>
-            <span class="bg-primary text-white px-3 py-1 rounded text-sm">{{ date }} 交易日</span>
-        </div>
-        <div class="flex items-center gap-4 text-sm">
-            <button id="themeToggle" class="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" title="切换主题">
-                <i class="fa fa-moon-o dark:hidden"></i>
-                <i class="fa fa-sun-o hidden dark:inline"></i>
-            </button>
-            <span class="text-gray-500 dark:text-gray-400 hidden sm:inline"><i class="fa fa-clock-o"></i> 每日08:00自动更新</span>
-            <span class="text-gray-500 dark:text-gray-400 hidden sm:inline"><i class="fa fa-shield"></i> 仅权威信源</span>
-        </div>
-    </div>
-</header>
+    # 产业链映射表
+    industry_map = [
+        {"direction": "创新药/CXO", "catalysis": "基药扩容、BD出海加速", "source": "卫健委、药企公告", "benefit": "CXO、创新药研发", "verify": "月度BD交易、医保谈判", "risk": "降价、研发失败", "tag": "继续跟踪"},
+        {"direction": "覆铜板/PCB", "catalysis": "AI需求拉动产业链涨价", "source": "企业公告、上海钢联", "benefit": "覆铜板、高阶PCB", "verify": "板材价格、服务器出货", "risk": "需求不及预期", "tag": "继续跟踪"},
+        {"direction": "白酒消费", "catalysis": "社零数据修复，消费边际改善", "source": "国家统计局", "benefit": "次高端、区域白酒", "verify": "批价、旺季动销", "risk": "复苏乏力", "tag": "低位修复"},
+        {"direction": "存储芯片", "catalysis": "行业周期上行，价格回暖", "source": "行业数据机构、业绩预告", "benefit": "存储模组、封测", "verify": "DRAM/NAND合约价", "risk": "交易拥挤、需求放缓", "tag": "谨慎追高"},
+        {"direction": "半导体设备", "catalysis": "国产替代持续推进", "source": "SEMI、中标公告", "benefit": "刻蚀、薄膜、检测设备", "verify": "设备中标公告", "risk": "出口管制升级", "tag": "等待确认"},
+        {"direction": "泛消费复苏", "catalysis": "经济数据边际改善", "source": "国家统计局", "benefit": "零售、旅游、餐饮", "verify": "月度PMI、社零数据", "risk": "复苏力度弱", "tag": "低位修复"}
+    ]
 
-<main class="container mx-auto px-4 py-6 grid grid-cols-12 gap-6">
-    <!-- 左侧主区域 9列 -->
-    <section class="col-span-12 lg:col-span-9 space-y-6">
-        
-        <!-- 1. 核心总览 -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow transition-colors duration-300">
-            <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
-                <i class="fa fa-comment-o text-primary"></i> 当日核心总览
-            </h2>
-            <div class="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-primary p-4 rounded mb-4">
-                <p class="font-medium">{{ one_sentence_summary }}</p>
-            </div>
-            <div class="flex items-center gap-3 mb-2">
-                <span class="font-medium">市场温度评级：</span>
-                <span class="tag bg-wait">{{ market_temp }}</span>
-            </div>
-            <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc pl-5 space-y-1">
-                {% for reason in temp_reasons %}
-                <li>{{ reason }}</li>
-                {% endfor %}
-            </ul>
-        </div>
+    # 明日观察清单
+    tomorrow_checklist = [
+        "主要指数能否在支撑位企稳止跌",
+        "医药消费板块能否延续强势表现",
+        "两市成交量是否进一步萎缩",
+        "北向资金当日整体流向",
+        "晚间重要业绩公告与政策消息",
+        "海外市场隔夜表现",
+        "有无新的产业扶持政策发布"
+    ]
 
-        <!-- 2. 指数与资金复盘 -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow transition-colors duration-300">
-            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                <i class="fa fa-bar-chart text-primary"></i> 指数&资金复盘
-            </h2>
-            <!-- 指数卡片 -->
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-                {% for idx in index_list %}
-                <div class="border dark:border-gray-700 rounded-lg p-3 text-center">
-                    <div class="font-medium mb-1">{{ idx.name }}</div>
-                    <div class="{% if idx.change >= 0 %}text-rise{% else %}text-fall{% endif %} font-bold text-xl mb-1">
-                        {{ idx.change }}%
-                    </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ idx.close }}</div>
-                </div>
-                {% endfor %}
-            </div>
+    # 持仓自查维度
+    position_check = [
+        "仓位暴露：评估高位科技赛道持仓占比与风险",
+        "题材拥挤度：规避短期交易过度拥挤的板块",
+        "公告验证：核查持仓个股最新业绩预告",
+        "业绩验证：区分纯题材炒作与有业绩支撑标的",
+        "成交量：规避放量大跌个股，关注缩量优质标的",
+        "龙虎榜：跟踪重点个股机构资金动向",
+        "政策风险：关注持仓行业监管政策变化",
+        "海外风险：外围市场波动、地缘事件影响"
+    ]
 
-            <!-- 双图表 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div id="volumeChart" class="w-full h-64 border dark:border-gray-700 rounded p-2"></div>
-                <div id="riseFallChart" class="w-full h-64 border dark:border-gray-700 rounded p-2"></div>
-            </div>
-            
-            <!-- 市场概况文字 -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
-                <div class="border dark:border-gray-700 p-3 rounded">
-                    <div class="text-gray-500 dark:text-gray-400 mb-1">涨跌家数</div>
-                    <div>上涨<span class="text-rise">{{ market_overview.rise_count }}</span>家 下跌<span class="text-fall">{{ market_overview.fall_count }}</span>家</div>
-                </div>
-                <div class="border dark:border-gray-700 p-3 rounded">
-                    <div class="text-gray-500 dark:text-gray-400 mb-1">涨跌停统计</div>
-                    <div>涨停{{ market_overview.limit_up }}家 / 跌停{{ market_overview.limit_down }}家</div>
-                </div>
-                <div class="border dark:border-gray-700 p-3 rounded">
-                    <div class="text-gray-500 dark:text-gray-400 mb-1">市场总成交额</div>
-                    <div class="font-bold">{{ market_overview.total_volume }}</div>
-                    <div class="text-xs text-neutral">{{ market_overview.volume_change }}</div>
-                </div>
-            </div>
+    # 一句话结论 + 市场温度
+    one_sentence_summary = "市场整体偏弱运行，主要指数全线收跌，高位科技赛道获利兑现明显，资金转向低位医药消费防御；明日重点观察指数支撑位承接力度以及量能是否萎缩。"
+    market_temp = "偏弱"
+    temp_reasons = [
+        "五大指数全线收跌，市场整体承压明显",
+        "板块分化加剧，高位科技品种调整幅度较大",
+        "资金避险情绪升温，转向低位防御板块",
+        "成交量有所缩量，观望情绪上升"
+    ]
 
-            <div class="text-sm">
-                <div class="font-semibold mb-1">板块强弱：</div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div>领涨：{{ lead_sectors | join('、') }}</div>
-                    <div>领跌：{{ fall_sectors | join('、') }}</div>
-                </div>
-                <div class="mt-2">
-                    <span class="font-semibold">资金线索：</span>
-                    南向资金净买入超120亿港元；场内资金高低切换，从半导体赛道切换至低位医药消费；科创类ETF放量分歧。
-                </div>
-            </div>
-        </div>
+    return {
+        "date": today_str,
+        "date_key": date_key,
+        "build_time": build_time,
+        "is_trade_day": True,
+        "one_sentence_summary": one_sentence_summary,
+        "market_temp": market_temp,
+        "temp_reasons": temp_reasons,
+        "index_list": index_list,
+        "market_overview": market_overview,
+        "volume_dates": volume_dates,
+        "volume_7d": volume_7d,
+        "sector_data": sector_data,
+        "lead_sectors": lead_sectors,
+        "fall_sectors": fall_sectors,
+        "hot_top5": hot_top5,
+        "industry_map": industry_map,
+        "tomorrow_checklist": tomorrow_checklist,
+        "position_check": position_check
+    }
 
-        <!-- 3. 行业板块热力图 -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow transition-colors duration-300">
-            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                <i class="fa fa-th text-primary"></i> 行业板块涨跌幅热力图
-            </h2>
-            <div id="sectorHeatmap" class="w-full h-80"></div>
-        </div>
-
-        <!-- 4. 核心热点TOP5 -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow transition-colors duration-300">
-            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                <i class="fa fa-fire text-orange-500"></i> 核心热点TOP5
-            </h2>
-            <div class="space-y-5">
-                {% for hot in hot_top5 %}
-                <div class="border dark:border-gray-700 rounded-lg p-4">
-                    <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
-                        <h3 class="font-bold">{{ hot.rank }}. {{ hot.title }}</h3>
-                        <span class="tag 
-                            {% if hot.tag == '继续跟踪' %}bg-track
-                            {% elif hot.tag == '等待确认' %}bg-wait
-                            {% elif hot.tag == '谨慎追高' %}bg-high
-                            {% elif hot.tag == '风险升高' %}bg-risk
-                            {% elif hot.tag == '低位修复' %}bg-repair
-                            {% else %}bg-cash{% endif %}">
-                            {{ hot.tag }}
-                        </span>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-300">
-                        <div><span class="text-gray-500 dark:text-gray-400">催化事件：</span>{{ hot.catalysis }}</div>
-                        <div><span class="text-gray-500 dark:text-gray-400">权威信源：</span>{{ hot.source }}</div>
-                        <div><span class="text-gray-500 dark:text-gray-400">A股映射：</span>{{ hot.a_share_map }}</div>
-                        <div><span class="text-gray-500 dark:text-gray-400">持续性：</span>{{ hot.duration }}</div>
-                        <div><span class="text-gray-500 dark:text-gray-400">验证指标：</span>{{ hot.verify_index }}</div>
-                        <div><span class="text-gray-500 dark:text-gray-400">风险点：</span>{{ hot.risk }}</div>
-                    </div>
-                    <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        强度：{{ hot.intensity }} | 分类：{{ hot.category }} | 信源等级：{{ hot.source_level }}级
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- 5. 产业链映射表 -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow overflow-x-auto scroll-hidden transition-colors duration-300">
-            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                <i class="fa fa-sitemap text-primary"></i> 产业链A股映射总表
-            </h2>
-            <table class="w-full text-sm border-collapse min-w-[900px]">
-                <thead>
-                    <tr class="bg-gray-100 dark:bg-gray-700">
-                        <th class="border dark:border-gray-600 p-2 text-left">赛道方向</th>
-                        <th class="border dark:border-gray-600 p-2 text-left">核心催化</th>
-                        <th class="border dark:border-gray-600 p-2 text-left">权威来源</th>
-                        <th class="border dark:border-gray-600 p-2 text-left">受益环节</th>
-                        <th class="border dark:border-gray-600 p-2 text-left">验证指标</th>
-                        <th class="border dark:border-gray-600 p-2 text-left">风险点</th>
-                        <th class="border dark:border-gray-600 p-2 text-center">观察标签</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in industry_map %}
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td class="border dark:border-gray-600 p-2 font-medium">{{ item.direction }}</td>
-                        <td class="border dark:border-gray-600 p-2">{{ item.catalysis }}</td>
-                        <td class="border dark:border-gray-600 p-2">{{ item.source }}</td>
-                        <td class="border dark:border-gray-600 p-2">{{ item.benefit }}</td>
-                        <td class="border dark:border-gray-600 p-2">{{ item.verify }}</td>
-                        <td class="border dark:border-gray-600 p-2">{{ item.risk }}</td>
-                        <td class="border dark:border-gray-600 p-2 text-center">
-                            <span class="tag 
-                                {% if item.tag == '继续跟踪' %}bg-track
-                                {% elif item.tag == '等待确认' %}bg-wait
-                                {% elif item.tag == '谨慎追高' %}bg-high
-                                {% elif item.tag == '风险升高' %}bg-risk
-                                {% elif item.tag == '低位修复' %}bg-repair
-                                {% else %}bg-cash{% endif %}">
-                                {{ item.tag }}
-                            </span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <!-- 右侧边栏 3列 -->
-    <aside class="col-span-12 lg:col-span-3 space-y-6">
-        <!-- 明日观察清单 -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow transition-colors duration-300">
-            <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
-                <i class="fa fa-list-ul text-primary"></i> 明日观察清单
-            </h2>
-            <ul class="space-y-2 text-sm">
-                {% for item in tomorrow_checklist %}
-                <li class="flex gap-2">
-                    <i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i>
-                    <span>{{ item }}</span>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <!-- 持仓自查维度 -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow transition-colors duration-300">
-            <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
-                <i class="fa fa-briefcase text-primary"></i> 持仓自查维度
-            </h2>
-            <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                {% for item in position_check %}
-                <li>{{ loop.index }}. {{ item }}</li>
-                {% endfor %}
-            </ul>
-            <div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-sm rounded">
-                <i class="fa fa-exclamation-circle"></i> 提示：页面所有内容仅供参考，不构成投资建议。
-            </div>
-        </div>
-
-        <!-- 权威信源分级 -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow transition-colors duration-300">
-            <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
-                <i class="fa fa-link text-primary"></i> 权威信源分级
-            </h2>
-            <div class="space-y-3 text-sm">
-                <div>
-                    <div class="font-semibold text-primary mb-1">A级（官方最高权威）</div>
-                    <p class="text-gray-600 dark:text-gray-400">统计局、卫健委、NMPA、交易所、巨潮资讯、上市公司公告</p>
-                </div>
-                <div>
-                    <div class="font-semibold text-wait mb-1">B级（正规权威媒体/行业数据）</div>
-                    <p class="text-gray-600 dark:text-gray-400">四大证券报、新华社、央视财经、SEMI、TrendForce、上海钢联</p>
-                </div>
-                <div class="p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-xs rounded">
-                    <i class="fa fa-ban"></i> 禁止接入：股吧、雪球、短视频评论、自媒体论坛等非权威内容
-                </div>
-            </div>
-        </div>
-
-        <!-- 当前主要风险 -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow transition-colors duration-300">
-            <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
-                <i class="fa fa-exclamation-triangle text-rise"></i> 当前主要风险
-            </h2>
-            <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                <li class="flex gap-2"><i class="fa fa-angle-right text-rise mt-1"></i> 科技赛道交易拥挤，获利盘兑现压力大</li>
-                <li class="flex gap-2"><i class="fa fa-angle-right text-rise mt-1"></i> 中报业绩披露期，谨防业绩不及预期</li>
-                <li class="flex gap-2"><i class="fa fa-angle-right text-rise mt-1"></i> 海外半导体出口管制政策存在不确定性</li>
-                <li class="flex gap-2"><i class="fa fa-angle-right text-rise mt-1"></i> 美联储货币政策转向预期波动</li>
-            </ul>
-        </div>
-    </aside>
-</main>
-
-<!-- 页脚 -->
-<footer class="mt-10 bg-gray-800 dark:bg-gray-950 text-gray-300 py-6">
-    <div class="container mx-auto px-4 text-center text-sm">
-        <p>A股早间决策内参 | 每日08:00自动生成 | 仅作信息辅助，不构成任何投资建议</p>
-        <p class="mt-2">风险提示：股市有风险，投资需谨慎；所有数据均来源于公开权威渠道。</p>
-    </div>
-</footer>
-
-<script>
-// ========== 深色模式切换 ==========
-const themeToggle = document.getElementById('themeToggle');
-const html = document.documentElement;
-
-if (localStorage.getItem('theme') === 'dark' || 
-    (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    html.classList.add('dark');
-}
-
-themeToggle.addEventListener('click', () => {
-    html.classList.toggle('dark');
-    localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
-    renderAllCharts();
-});
-
-// ========== 图表全局变量 ==========
-let volumeChart = null;
-let riseFallChart = null;
-let sectorHeatmap = null;
-
-// 获取图表适配的文字颜色
-function getChartTextColor() {
-    return document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#374151';
-}
-function getChartGridColor() {
-    return document.documentElement.classList.contains('dark') ? '#374151' : '#f3f4f6';
-}
-
-// 渲染所有图表
-function renderAllCharts() {
-    renderVolumeChart();
-    renderRiseFallChart();
-    renderSectorHeatmap();
-}
-
-// 1. 成交额柱状图
-function renderVolumeChart() {
-    const dom = document.getElementById('volumeChart');
-    if (volumeChart) volumeChart.dispose();
-    volumeChart = echarts.init(dom);
+# ===================== 主入口 =====================
+def main():
+    print(f"[{datetime.now()}] 开始生成早间内参...")
     
-    const textColor = getChartTextColor();
-    const option = {
-        title: { text: '近7日两市成交额（万亿）', left: 'center', textStyle: { fontSize: 13, color: textColor } },
-        tooltip: { trigger: 'axis' },
-        grid: { left: 40, right: 20, top: 40, bottom: 30 },
-        xAxis: {
-            type: 'category',
-            data: {{ volume_dates | tojson }},
-            axisLabel: { color: textColor, fontSize: 11 },
-            axisLine: { show: false }
-        },
-        yAxis: {
-            type: 'value',
-            splitLine: { lineStyle: { color: getChartGridColor() } },
-            axisLabel: { color: textColor, fontSize: 11 }
-        },
-        series: [{
-            data: {{ volume_7d | tojson }},
-            type: 'bar',
-            barWidth: '50%',
-            itemStyle: {
-                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                    { offset: 0, color: '#60a5fa' },
-                    { offset: 1, color: '#2563eb' }
-                ]),
-                borderRadius: [4, 4, 0, 0]
-            }
-        }]
-    };
-    volumeChart.setOption(option);
-}
+    if not is_trade_day():
+        print("今日非A股交易日，跳过生成。")
+        return
 
-// 2. 涨跌家数饼图
-function renderRiseFallChart() {
-    const dom = document.getElementById('riseFallChart');
-    if (riseFallChart) riseFallChart.dispose();
-    riseFallChart = echarts.init(dom);
+    init_dirs()
+    data = build_full_data()
+    date_key = data["date_key"]
+
+    # 保存历史JSON
+    json_path = os.path.join(DATA_DIR, f"report_{date_key}.json")
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    shutil.copy(json_path, os.path.join(DATA_DIR, "latest.json"))
+
+    # 渲染HTML
+    if not os.path.exists(TEMPLATE_PATH):
+        raise FileNotFoundError(f"模板文件不存在：{TEMPLATE_PATH}")
     
-    const textColor = getChartTextColor();
-    const rise = {{ market_overview.rise_count }};
-    const fall = {{ market_overview.fall_count }};
-    const flat = Math.max(0, 5000 - rise - fall);
-
-    const option = {
-        title: { text: '涨跌家数分布', left: 'center', textStyle: { fontSize: 13, color: textColor } },
-        tooltip: { trigger: 'item' },
-        legend: { bottom: 5, textStyle: { color: textColor, fontSize: 11 } },
-        series: [{
-            type: 'pie',
-            radius: ['40%', '65%'],
-            center: ['50%', '45%'],
-            label: { show: false },
-            data: [
-                { value: rise, name: '上涨', itemStyle: { color: '#e53e3e' } },
-                { value: fall, name: '下跌', itemStyle: { color: '#38a169' } },
-                { value: flat, name: '平盘', itemStyle: { color: '#718096' } }
-            ]
-        }]
-    };
-    riseFallChart.setOption(option);
-}
-
-// 3. 行业热力图
-function renderSectorHeatmap() {
-    const dom = document.getElementById('sectorHeatmap');
-    if (sectorHeatmap) sectorHeatmap.dispose();
-    sectorHeatmap = echarts.init(dom);
+    with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
+        template = Template(f.read())
     
-    const textColor = getChartTextColor();
-    const sectors = {{ sector_data | tojson }};
-    
-    const data = sectors.map((item, index) => [index % 5, Math.floor(index / 5), item[1], item[0]]);
-    
-    const option = {
-        tooltip: {
-            formatter: params => params.data[3] + '<br/>涨跌幅：' + params.data[2] + '%'
-        },
-        grid: { left: 20, right: 20, top: 30, bottom: 20 },
-        xAxis: {
-            type: 'category',
-            data: ['', '', '', '', ''],
-            splitArea: { show: true },
-            axisLine: { show: false },
-            axisTick: { show: false },
-            axisLabel: { show: false }
-        },
-        yAxis: {
-            type: 'category',
-            data: ['', '', '', ''],
-            splitArea: { show: true },
-            axisLine: { show: false },
-            axisTick: { show: false },
-            axisLabel: { show: false }
-        },
-        visualMap: {
-            min: -5,
-            max: 8,
-            calculable: true,
-            orient: 'horizontal',
-            left: 'center',
-            bottom: 0,
-            textStyle: { color: textColor, fontSize: 11 },
-            inRange: {
-                color: ['#38a169', '#68d391', '#f7fafc', '#fc8181', '#e53e3e']
-            }
-        },
-        series: [{
-            type: 'heatmap',
-            data: data,
-            label: {
-                show: true,
-                formatter: params => params.data[3] + '\n' + params.data[2] + '%',
-                color: '#fff',
-                fontSize: 11
-            },
-            emphasis: {
-                itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0, 0, 0, 0.5)' }
-            }
-        }]
-    };
-    sectorHeatmap.setOption(option);
-}
+    html_content = template.render(**data)
+    with open(OUTPUT_HTML, "w", encoding="utf-8") as f:
+        f.write(html_content)
 
-// 页面加载完成后渲染
-window.addEventListener('load', renderAllCharts);
+    print(f"✅ 生成完成：{OUTPUT_HTML}")
+    print(f"✅ 构建时间：{data['build_time']}")
+    print(f"✅ 历史数据：{json_path}")
 
-// 窗口大小变化时自适应
-window.addEventListener('resize', () => {
-    volumeChart && volumeChart.resize();
-    riseFallChart && riseFallChart.resize();
-    sectorHeatmap && sectorHeatmap.resize();
-});
-</script>
-</body>
-</html>
+if __name__ == "__main__":
+    main()
