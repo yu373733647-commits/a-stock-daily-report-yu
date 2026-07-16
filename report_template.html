@@ -120,8 +120,8 @@
             <div class="text-sm">
                 <div class="font-semibold mb-1">板块强弱：</div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div>领涨：医疗研发外包、创新药、白酒、院线、宠物食品</div>
-                    <div>领跌：存储芯片、算力芯片、半导体设备、贵金属</div>
+                    <div>领涨：{{ lead_sectors | join('、') }}</div>
+                    <div>领跌：{{ fall_sectors | join('、') }}</div>
                 </div>
                 <div class="mt-2 font-semibold mb-1">资金线索：</div>
                 <p class="text-gray-700 dark:text-gray-300">南向资金净买入超120亿港元；场内资金高低切换，从半导体赛道切换至低位医药消费；科创类ETF放量分歧。</p>
