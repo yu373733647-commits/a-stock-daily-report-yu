@@ -22,7 +22,7 @@
                         high: '#dc2626',
                         risk: '#991b1b',
                         repair: '#059669',
-                        cash: '#6b7280'
+                        cash: '#4b5563'
                     }
                 }
             }
@@ -62,7 +62,7 @@
     <!-- 左侧主区域 9列 -->
     <section class="col-span-12 lg:col-span-9 space-y-6">
         
-        <!-- 1. 一句话结论 + 市场温度 -->
+        <!-- 1. 核心总览 -->
         <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow transition-colors duration-300">
             <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
                 <i class="fa fa-comment-o text-primary"></i> 当日核心总览
@@ -71,10 +71,10 @@
                 <p class="font-medium">市场整体偏弱运行，主要指数全线收跌，高位科技赛道获利兑现明显，资金转向低位医药消费防御；明日重点观察指数支撑位承接力度以及量能是否萎缩。</p>
             </div>
             <div class="flex items-center gap-3 mb-2">
-                <span class="font-semibold">市场温度评级：</span>
+                <span class="font-medium">市场温度评级：</span>
                 <span class="tag bg-wait">偏弱</span>
             </div>
-            <ul class="text-sm text-gray-700 dark:text-gray-300 list-disc pl-5 space-y-1">
+            <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc pl-5 space-y-1">
                 
                 <li>五大指数全线收跌，市场整体承压明显</li>
                 
@@ -92,35 +92,46 @@
             <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
                 <i class="fa fa-bar-chart text-primary"></i> 指数&资金复盘
             </h2>
+            <!-- 指数卡片 -->
             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
                 
-                <div class="border dark:border-gray-700 rounded p-3 text-center">
-                    <div class="font-semibold">上证指数</div>
-                    <div class="text-fall font-bold text-lg">-1.85%</div>
+                <div class="border dark:border-gray-700 rounded-lg p-3 text-center">
+                    <div class="font-medium mb-1">上证指数</div>
+                    <div class="text-fall font-bold text-xl mb-1">
+                        -1.85%
+                    </div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">3882.41</div>
                 </div>
                 
-                <div class="border dark:border-gray-700 rounded p-3 text-center">
-                    <div class="font-semibold">深证成指</div>
-                    <div class="text-fall font-bold text-lg">-1.97%</div>
+                <div class="border dark:border-gray-700 rounded-lg p-3 text-center">
+                    <div class="font-medium mb-1">深证成指</div>
+                    <div class="text-fall font-bold text-xl mb-1">
+                        -1.97%
+                    </div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">14488.65</div>
                 </div>
                 
-                <div class="border dark:border-gray-700 rounded p-3 text-center">
-                    <div class="font-semibold">创业板指</div>
-                    <div class="text-fall font-bold text-lg">-2.95%</div>
+                <div class="border dark:border-gray-700 rounded-lg p-3 text-center">
+                    <div class="font-medium mb-1">创业板指</div>
+                    <div class="text-fall font-bold text-xl mb-1">
+                        -2.95%
+                    </div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">3692.46</div>
                 </div>
                 
-                <div class="border dark:border-gray-700 rounded p-3 text-center">
-                    <div class="font-semibold">科创50</div>
-                    <div class="text-fall font-bold text-lg">-4.02%</div>
+                <div class="border dark:border-gray-700 rounded-lg p-3 text-center">
+                    <div class="font-medium mb-1">科创50</div>
+                    <div class="text-fall font-bold text-xl mb-1">
+                        -4.02%
+                    </div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">1846.88</div>
                 </div>
                 
-                <div class="border dark:border-gray-700 rounded p-3 text-center">
-                    <div class="font-semibold">北证50</div>
-                    <div class="text-fall font-bold text-lg">-2.65%</div>
+                <div class="border dark:border-gray-700 rounded-lg p-3 text-center">
+                    <div class="font-medium mb-1">北证50</div>
+                    <div class="text-fall font-bold text-xl mb-1">
+                        -2.65%
+                    </div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">1101.8</div>
                 </div>
                 
@@ -132,29 +143,33 @@
                 <div id="riseFallChart" class="w-full h-64 border dark:border-gray-700 rounded p-2"></div>
             </div>
             
+            <!-- 市场概况文字 -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
                 <div class="border dark:border-gray-700 p-3 rounded">
-                    <div class="text-gray-500 dark:text-gray-400">涨跌家数</div>
-                    <div>上涨1782家 <span class="text-rise">下跌3265家</span></div>
+                    <div class="text-gray-500 dark:text-gray-400 mb-1">涨跌家数</div>
+                    <div>上涨<span class="text-rise">1782</span>家 下跌<span class="text-fall">3265</span>家</div>
                 </div>
                 <div class="border dark:border-gray-700 p-3 rounded">
-                    <div class="text-gray-500 dark:text-gray-400">涨跌停统计</div>
+                    <div class="text-gray-500 dark:text-gray-400 mb-1">涨跌停统计</div>
                     <div>涨停42家 / 跌停71家</div>
                 </div>
                 <div class="border dark:border-gray-700 p-3 rounded">
-                    <div class="text-gray-500 dark:text-gray-400">市场总成交额</div>
+                    <div class="text-gray-500 dark:text-gray-400 mb-1">市场总成交额</div>
                     <div class="font-bold">2.62万亿</div>
                     <div class="text-xs text-neutral">较前一交易日缩量</div>
                 </div>
             </div>
+
             <div class="text-sm">
                 <div class="font-semibold mb-1">板块强弱：</div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div>领涨：医药商业、医疗服务、生物制品、白酒</div>
                     <div>领跌：半导体、光学光电子、计算机设备、通信</div>
                 </div>
-                <div class="mt-2 font-semibold mb-1">资金线索：</div>
-                <p class="text-gray-700 dark:text-gray-300">南向资金净买入超120亿港元；场内资金高低切换，从半导体赛道切换至低位医药消费；科创类ETF放量分歧。</p>
+                <div class="mt-2">
+                    <span class="font-semibold">资金线索：</span>
+                    南向资金净买入超120亿港元；场内资金高低切换，从半导体赛道切换至低位医药消费；科创类ETF放量分歧。
+                </div>
             </div>
         </div>
 
@@ -173,7 +188,7 @@
             </h2>
             <div class="space-y-5">
                 
-                <div class="border dark:border-gray-700 rounded p-4">
+                <div class="border dark:border-gray-700 rounded-lg p-4">
                     <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
                         <h3 class="font-bold">1. 2026-07-16 市场调整，低位医药消费板块获资金承接</h3>
                         <span class="tag 
@@ -182,7 +197,7 @@
                             等待确认
                         </span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-300">
                         <div><span class="text-gray-500 dark:text-gray-400">催化事件：</span>高位科技赛道获利兑现，资金向低位医药、消费板块切换，防御属性板块逆势走强</div>
                         <div><span class="text-gray-500 dark:text-gray-400">权威信源：</span>交易所公开数据、证券时报</div>
                         <div><span class="text-gray-500 dark:text-gray-400">A股映射：</span>医药生物、食品饮料板块逆势上涨，半导体、AI赛道深度调整</div>
@@ -195,7 +210,7 @@
                     </div>
                 </div>
                 
-                <div class="border dark:border-gray-700 rounded p-4">
+                <div class="border dark:border-gray-700 rounded-lg p-4">
                     <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
                         <h3 class="font-bold">2. 2026-07-16 创新药政策利好持续释放</h3>
                         <span class="tag 
@@ -204,7 +219,7 @@
                             继续跟踪
                         </span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-300">
                         <div><span class="text-gray-500 dark:text-gray-400">催化事件：</span>医保政策优化，创新药出海BD交易持续活跃，行业估值修复逻辑延续</div>
                         <div><span class="text-gray-500 dark:text-gray-400">权威信源：</span>国家医保局、上市公司公告</div>
                         <div><span class="text-gray-500 dark:text-gray-400">A股映射：</span>CXO、创新药板块逆势走强，板块内多股涨幅超5%</div>
@@ -217,7 +232,7 @@
                     </div>
                 </div>
                 
-                <div class="border dark:border-gray-700 rounded p-4">
+                <div class="border dark:border-gray-700 rounded-lg p-4">
                     <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
                         <h3 class="font-bold">3. 2026-07-16 AI产业链上游原材料涨价延续</h3>
                         <span class="tag 
@@ -226,7 +241,7 @@
                             继续跟踪
                         </span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-300">
                         <div><span class="text-gray-500 dark:text-gray-400">催化事件：</span>AI服务器需求高增，覆铜板、高阶PCB上游原材料供需紧张，企业陆续上调报价</div>
                         <div><span class="text-gray-500 dark:text-gray-400">权威信源：</span>企业公告、行业协会</div>
                         <div><span class="text-gray-500 dark:text-gray-400">A股映射：</span>覆铜板、PCB板块业绩弹性释放，龙头公司订单饱满</div>
@@ -239,7 +254,7 @@
                     </div>
                 </div>
                 
-                <div class="border dark:border-gray-700 rounded p-4">
+                <div class="border dark:border-gray-700 rounded-lg p-4">
                     <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
                         <h3 class="font-bold">4. 2026-07-16 半导体赛道高位调整</h3>
                         <span class="tag 
@@ -248,7 +263,7 @@
                             谨慎追高
                         </span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-300">
                         <div><span class="text-gray-500 dark:text-gray-400">催化事件：</span>板块累计涨幅较大，中报业绩期资金兑现意愿增强，科创50领跌主要指数</div>
                         <div><span class="text-gray-500 dark:text-gray-400">权威信源：</span>交易所公开数据、上海证券报</div>
                         <div><span class="text-gray-500 dark:text-gray-400">A股映射：</span>存储、算力设备、半导体设备深度调整，多股跌幅超7%</div>
@@ -261,7 +276,7 @@
                     </div>
                 </div>
                 
-                <div class="border dark:border-gray-700 rounded p-4">
+                <div class="border dark:border-gray-700 rounded-lg p-4">
                     <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
                         <h3 class="font-bold">5. 2026-07-16 宏观经济数据持续受市场关注</h3>
                         <span class="tag 
@@ -270,7 +285,7 @@
                             低位修复
                         </span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-300">
                         <div><span class="text-gray-500 dark:text-gray-400">催化事件：</span>市场关注后续稳增长政策落地节奏，消费复苏斜率有待进一步验证</div>
                         <div><span class="text-gray-500 dark:text-gray-400">权威信源：</span>国家统计局、新华社</div>
                         <div><span class="text-gray-500 dark:text-gray-400">A股映射：</span>大消费板块存在估值修复预期，低位震荡运行</div>
@@ -286,7 +301,7 @@
             </div>
         </div>
 
-        <!-- 5. 产业链映射表格 -->
+        <!-- 5. 产业链映射表 -->
         <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow overflow-x-auto scroll-hidden transition-colors duration-300">
             <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
                 <i class="fa fa-sitemap text-primary"></i> 产业链A股映射总表
@@ -406,7 +421,7 @@
         </div>
     </section>
 
-    <!-- 右侧侧边栏 3列 -->
+    <!-- 右侧边栏 3列 -->
     <aside class="col-span-12 lg:col-span-3 space-y-6">
         <!-- 明日观察清单 -->
         <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow transition-colors duration-300">
@@ -415,29 +430,50 @@
             </h2>
             <ul class="space-y-2 text-sm">
                 
-                <li class="flex gap-2"><i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i> <span>主要指数能否在支撑位企稳止跌</span></li>
+                <li class="flex gap-2">
+                    <i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i>
+                    <span>主要指数能否在支撑位企稳止跌</span>
+                </li>
                 
-                <li class="flex gap-2"><i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i> <span>医药消费板块能否延续强势表现</span></li>
+                <li class="flex gap-2">
+                    <i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i>
+                    <span>医药消费板块能否延续强势表现</span>
+                </li>
                 
-                <li class="flex gap-2"><i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i> <span>两市成交量是否进一步萎缩</span></li>
+                <li class="flex gap-2">
+                    <i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i>
+                    <span>两市成交量是否进一步萎缩</span>
+                </li>
                 
-                <li class="flex gap-2"><i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i> <span>北向资金当日整体流向</span></li>
+                <li class="flex gap-2">
+                    <i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i>
+                    <span>北向资金当日整体流向</span>
+                </li>
                 
-                <li class="flex gap-2"><i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i> <span>晚间重要业绩公告与政策消息</span></li>
+                <li class="flex gap-2">
+                    <i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i>
+                    <span>晚间重要业绩公告与政策消息</span>
+                </li>
                 
-                <li class="flex gap-2"><i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i> <span>海外市场隔夜表现</span></li>
+                <li class="flex gap-2">
+                    <i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i>
+                    <span>海外市场隔夜表现</span>
+                </li>
                 
-                <li class="flex gap-2"><i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i> <span>有无新的产业扶持政策发布</span></li>
+                <li class="flex gap-2">
+                    <i class="fa fa-circle-o text-primary mt-1 flex-shrink-0"></i>
+                    <span>有无新的产业扶持政策发布</span>
+                </li>
                 
             </ul>
         </div>
 
-        <!-- 持仓决策辅助 -->
+        <!-- 持仓自查维度 -->
         <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow transition-colors duration-300">
             <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
                 <i class="fa fa-briefcase text-primary"></i> 持仓自查维度
             </h2>
-            <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+            <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                 
                 <li>1. 仓位暴露：评估高位科技赛道持仓占比与风险</li>
                 
@@ -457,36 +493,36 @@
                 
             </ul>
             <div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-sm rounded">
-                <i class="fa fa-exclamation-circle"></i> 提示：页面不输出任何买卖指令，仅提供客观数据与风险观测维度
+                <i class="fa fa-exclamation-circle"></i> 提示：页面所有内容仅供参考，不构成投资建议。
             </div>
         </div>
 
-        <!-- 权威信源清单 -->
+        <!-- 权威信源分级 -->
         <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow transition-colors duration-300">
             <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
                 <i class="fa fa-link text-primary"></i> 权威信源分级
             </h2>
             <div class="space-y-3 text-sm">
                 <div>
-                    <div class="font-semibold text-primary">A级（官方最高权威）</div>
+                    <div class="font-semibold text-primary mb-1">A级（官方最高权威）</div>
                     <p class="text-gray-600 dark:text-gray-400">统计局、卫健委、NMPA、交易所、巨潮资讯、上市公司公告</p>
                 </div>
                 <div>
-                    <div class="font-semibold text-wait">B级（正规权威媒体/行业数据）</div>
+                    <div class="font-semibold text-wait mb-1">B级（正规权威媒体/行业数据）</div>
                     <p class="text-gray-600 dark:text-gray-400">四大证券报、新华社、央视财经、SEMI、TrendForce、上海钢联</p>
                 </div>
-                <div class="p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 rounded text-xs">
-                    <i class="fa fa-ban"></i> 禁止使用：股吧、雪球、短视频评论、自媒体论坛作为结论依据
+                <div class="p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-xs rounded">
+                    <i class="fa fa-ban"></i> 禁止接入：股吧、雪球、短视频评论、自媒体论坛等非权威内容
                 </div>
             </div>
         </div>
 
-        <!-- 风险预警卡片 -->
+        <!-- 当前主要风险 -->
         <div class="bg-white dark:bg-gray-800 rounded-lg p-5 card-shadow transition-colors duration-300">
             <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
                 <i class="fa fa-exclamation-triangle text-rise"></i> 当前主要风险
             </h2>
-            <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+            <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                 <li class="flex gap-2"><i class="fa fa-angle-right text-rise mt-1"></i> 科技赛道交易拥挤，获利盘兑现压力大</li>
                 <li class="flex gap-2"><i class="fa fa-angle-right text-rise mt-1"></i> 中报业绩披露期，谨防业绩不及预期</li>
                 <li class="flex gap-2"><i class="fa fa-angle-right text-rise mt-1"></i> 海外半导体出口管制政策存在不确定性</li>
@@ -496,11 +532,11 @@
     </aside>
 </main>
 
-<!-- 底部页脚 -->
+<!-- 页脚 -->
 <footer class="mt-10 bg-gray-800 dark:bg-gray-950 text-gray-300 py-6">
     <div class="container mx-auto px-4 text-center text-sm">
         <p>A股早间决策内参 | 每日08:00自动生成 | 仅作信息辅助，不构成任何投资建议</p>
-        <p class="mt-2">风险提示：股市有风险，投资需谨慎；所有数据仅来源于官方权威渠道</p>
+        <p class="mt-2">风险提示：股市有风险，投资需谨慎；所有数据均来源于公开权威渠道。</p>
     </div>
 </footer>
 
@@ -520,11 +556,12 @@ themeToggle.addEventListener('click', () => {
     renderAllCharts();
 });
 
-// ========== 图表渲染 ==========
+// ========== 图表全局变量 ==========
 let volumeChart = null;
 let riseFallChart = null;
 let sectorHeatmap = null;
 
+// 获取图表适配的文字颜色
 function getChartTextColor() {
     return document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#374151';
 }
@@ -532,13 +569,14 @@ function getChartGridColor() {
     return document.documentElement.classList.contains('dark') ? '#374151' : '#f3f4f6';
 }
 
+// 渲染所有图表
 function renderAllCharts() {
     renderVolumeChart();
     renderRiseFallChart();
     renderSectorHeatmap();
 }
 
-// 成交额趋势图
+// 1. 成交额柱状图
 function renderVolumeChart() {
     const dom = document.getElementById('volumeChart');
     if (volumeChart) volumeChart.dispose();
@@ -564,7 +602,7 @@ function renderVolumeChart() {
             data: [2.81, 2.75, 2.69, 2.63, 2.57, 2.51, 2.45],
             type: 'bar',
             barWidth: '50%',
-            itemStyle: { 
+            itemStyle: {
                 color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                     { offset: 0, color: '#60a5fa' },
                     { offset: 1, color: '#2563eb' }
@@ -576,7 +614,7 @@ function renderVolumeChart() {
     volumeChart.setOption(option);
 }
 
-// 涨跌家数饼图
+// 2. 涨跌家数饼图
 function renderRiseFallChart() {
     const dom = document.getElementById('riseFallChart');
     if (riseFallChart) riseFallChart.dispose();
@@ -606,7 +644,7 @@ function renderRiseFallChart() {
     riseFallChart.setOption(option);
 }
 
-// 行业热力图
+// 3. 行业热力图
 function renderSectorHeatmap() {
     const dom = document.getElementById('sectorHeatmap');
     if (sectorHeatmap) sectorHeatmap.dispose();
@@ -614,49 +652,63 @@ function renderSectorHeatmap() {
     
     const textColor = getChartTextColor();
     const sectors = [["\u533b\u836f\u5546\u4e1a", 3.52], ["\u533b\u7597\u670d\u52a1", 3.18], ["\u751f\u7269\u5236\u54c1", 2.76], ["\u767d\u9152", 1.92], ["\u98df\u54c1\u52a0\u5de5", 1.65], ["\u96f6\u552e", 1.23], ["\u65c5\u6e38\u9152\u5e97", 0.87], ["\u5bb6\u7535", 0.54], ["\u6c7d\u8f66", 0.21], ["\u7535\u529b", -0.36], ["\u94f6\u884c", -0.85], ["\u5730\u4ea7", -1.24], ["\u7164\u70ad", -1.89], ["\u94a2\u94c1", -2.15], ["\u6709\u8272", -2.78], ["\u519b\u5de5", -3.24], ["\u534a\u5bfc\u4f53", -4.12], ["\u5149\u5b66\u5149\u7535\u5b50", -3.86], ["\u8ba1\u7b97\u673a\u8bbe\u5907", -3.41], ["\u901a\u4fe1", -3.02]];
-        ['医疗服务', 7.51], ['生物制品', 5.23], ['白酒', 4.12], ['影视院线', 3.87],
-        ['食品加工', 2.95], ['零售', 2.31], ['旅游酒店', 1.86], ['家电', 1.52],
-        ['汽车', 0.87], ['电力', 0.34], ['银行', -0.12], ['地产', -0.58],
-        ['煤炭', -1.23], ['钢铁', -1.65], ['有色', -2.31], ['军工', -2.87],
-        ['半导体', -4.12], ['光学光电子', -3.56], ['计算机设备', -3.21], ['通信', -2.89]
-    ];
     
     const data = sectors.map((item, index) => [index % 5, Math.floor(index / 5), item[1], item[0]]);
     
     const option = {
-        tooltip: { formatter: params => params.data[3] + '<br/>涨跌幅：' + params.data[2] + '%' },
+        tooltip: {
+            formatter: params => params.data[3] + '<br/>涨跌幅：' + params.data[2] + '%'
+        },
         grid: { left: 20, right: 20, top: 30, bottom: 20 },
         xAxis: {
-            type: 'category', data: ['','','','',''],
-            splitArea: { show: true }, axisLine: { show: false },
-            axisTick: { show: false }, axisLabel: { show: false }
+            type: 'category',
+            data: ['', '', '', '', ''],
+            splitArea: { show: true },
+            axisLine: { show: false },
+            axisTick: { show: false },
+            axisLabel: { show: false }
         },
         yAxis: {
-            type: 'category', data: ['','','',''],
-            splitArea: { show: true }, axisLine: { show: false },
-            axisTick: { show: false }, axisLabel: { show: false }
+            type: 'category',
+            data: ['', '', '', ''],
+            splitArea: { show: true },
+            axisLine: { show: false },
+            axisTick: { show: false },
+            axisLabel: { show: false }
         },
         visualMap: {
-            min: -5, max: 8, calculable: true,
-            orient: 'horizontal', left: 'center', bottom: 0,
+            min: -5,
+            max: 8,
+            calculable: true,
+            orient: 'horizontal',
+            left: 'center',
+            bottom: 0,
             textStyle: { color: textColor, fontSize: 11 },
-            inRange: { color: ['#38a169', '#68d391', '#f7fafc', '#fc8181', '#e53e3e'] }
+            inRange: {
+                color: ['#38a169', '#68d391', '#f7fafc', '#fc8181', '#e53e3e']
+            }
         },
         series: [{
-            type: 'heatmap', data: data,
+            type: 'heatmap',
+            data: data,
             label: {
                 show: true,
                 formatter: params => params.data[3] + '\n' + params.data[2] + '%',
-                color: '#fff', fontSize: 11
+                color: '#fff',
+                fontSize: 11
             },
-            emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' } }
+            emphasis: {
+                itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0, 0, 0, 0.5)' }
+            }
         }]
     };
     sectorHeatmap.setOption(option);
 }
 
-// 初始化
+// 页面加载完成后渲染
 window.addEventListener('load', renderAllCharts);
+
+// 窗口大小变化时自适应
 window.addEventListener('resize', () => {
     volumeChart && volumeChart.resize();
     riseFallChart && riseFallChart.resize();
