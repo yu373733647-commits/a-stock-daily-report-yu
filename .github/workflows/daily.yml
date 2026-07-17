@@ -1,9 +1,9 @@
 name: 每日生成A股早间内参
 
 on:
-  schedule:
-    # 北京时间 8:00 = UTC 0:00，周一到周五
-    - cron: '0 0 * * 1-5'
+schedule:
+  # UTC 23:50 = 北京时间 7:50，对应周一到周日
+  - cron: '50 23 * * 0-4'
   workflow_dispatch:
 
 permissions:
